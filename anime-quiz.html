@@ -1,0 +1,92 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Угадай Аниме</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #222; color: white; }
+    .question { margin-bottom: 20px; }
+    button { padding: 10px; margin: 5px; cursor: pointer; }
+    #rc-points { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>🎌 Угадай Аниме по Описанию</h1>
+  <div class="question" id="question"></div>
+  <div id="answers"></div>
+  <p>RC Баллы: <span id="rc-points">0</span></p>
+  <button onclick="useReveal()">🔍 Купить выявлятель (50 RC)</button>
+
+  <script>
+    let rc = 0;
+    let currentQuestion = 0;
+    let usedReveal = false;
+
+    const questions = [
+      {
+        text: "Главный герой становится королем пиратов и ищет легендарное сокровище.",
+        correct: "One Piece",
+        options: ["Bleach", "One Piece", "Naruto", "Attack on Titan"]
+      },
+      {
+        text: "Мальчик становится шиноби и мечтает стать Хокаге.",
+        correct: "Naruto",
+        options: ["Demon Slayer", "One Piece", "Naruto", "Death Note"]
+      },
+      {
+        text: "В этом аниме главные герои сражаются с титанами за выживание.",
+        correct: "Attack on Titan",
+        options: ["Attack on Titan", "Tokyo Ghoul", "Black Clover", "Haikyuu!!"]
+      }
+    ];
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function showQuestion() {
+      usedReveal = false;
+      const q = questions[currentQuestion];
+      document.getElementById("question").innerText = q.text;
+      const shuffled = shuffle([...q.options]);
+      const answersDiv = document.getElementById("answers");
+      answersDiv.innerHTML = "";
+      shuffled.forEach(option => {
+        const btn = document.createElement("button");
+        btn.textContent = option;
+        btn.onclick = () => selectAnswer(option === q.correct);
+        answersDiv.appendChild(btn);
+      });
+    }
+
+    function selectAnswer(correct) {
+      if (correct) rc += 5;
+      currentQuestion = (currentQuestion + 1) % questions.length;
+      document.getElementById("rc-points").innerText = rc;
+      showQuestion();
+    }
+
+    function useReveal() {
+      if (rc < 50 || usedReveal) return;
+      rc -= 50;
+      usedReveal = true;
+      const q = questions[currentQuestion];
+      const correct = q.correct;
+      const wrongs = q.options.filter(opt => opt !== correct);
+      const remaining = [correct, wrongs[Math.floor(Math.random() * wrongs.length)]];
+      const answersDiv = document.getElementById("answers");
+      answersDiv.innerHTML = "";
+      shuffle(remaining).forEach(option => {
+        const btn = document.createElement("button");
+        btn.textContent = option;
+        btn.onclick = () => selectAnswer(option === correct);
+        answersDiv.appendChild(btn);
+      });
+      document.getElementById("rc-points").innerText = rc;
+    }
+
+    showQuestion();
+  </script>
+</body>
+</html>
