@@ -1,119 +1,84 @@
-const rcSpan = document.getElementById('rcPoints');
-const music = document.getElementById('bg-music');
-let currentQuestion;
+// script.js
+const questions = {
+  easy: [
+    {
+      question: "Главный герой хочет стать Хокаге.",
+      options: ["Bleach", "Naruto", "One Piece", "Tokyo Ghoul"],
+      answer: "Naruto"
+    },
+    {
+      question: "Мальчик становится охотником за сокровищами.",
+      options: ["Naruto", "Hunter x Hunter", "Attack on Titan", "Death Note"],
+      answer: "Hunter x Hunter"
+    }
+  ],
+  medium: [
+    {
+      question: "Мальчик находит тетрадь смерти.",
+      options: ["Blue Exorcist", "Demon Slayer", "Death Note", "My Hero Academia"],
+      answer: "Death Note"
+    }
+  ],
+  hard: [
+    {
+      question: "Мир, в котором человечество борется с титанами.",
+      options: ["Bleach", "Attack on Titan", "Naruto", "Sword Art Online"],
+      answer: "Attack on Titan"
+    }
+  ],
+  hardcore: [
+    {
+      question: "ГГ становится гульем после пересадки органов.",
+      options: ["Naruto", "Tokyo Ghoul", "One Piece", "Chainsaw Man"],
+      answer: "Tokyo Ghoul"
+    }
+  ]
+};
 
-// Баллы
-let rc = localStorage.getItem('rcPoints') ? parseInt(localStorage.getItem('rcPoints')) : 0;
-rcSpan.textContent = rc;
+let usedQuestions = [];
+let currentDifficulty = "";
+let rcPoints = parseInt(localStorage.getItem("rcPoints")) || 0;
+document.getElementById("rc-points").innerText = rcPoints;
 
-// Вопросы
-const questions = [
-  {
-    text: "Парень становится Хокаге, потеряв родителей и лиса в теле.",
-    answers: ["Наруто", "Блич", "Атака титанов", "Тетрадь смерти"],
-    correct: "Наруто",
-    difficulty: "Лёгкая"
-  },
-  {
-    text: "Школьник находит тетрадь, убивает преступников.",
-    answers: ["Токийский гуль", "Тетрадь смерти", "Евангелион", "Судьба"],
-    correct: "Тетрадь смерти",
-    difficulty: "Лёгкая"
-  },
-  {
-    text: "Парень в маске, ест людей, теряет себя.",
-    answers: ["Атака титанов", "Токийский гуль", "One Piece", "Судьба"],
-    correct: "Токийский гуль",
-    difficulty: "Средняя"
-  },
-  {
-    text: "Бесконечный поезд, демоны и дыхания.",
-    answers: ["Клинок, рассекающий демонов", "Naruto", "Блич", "Токийский гуль"],
-    correct: "Клинок, рассекающий демонов",
-    difficulty: "Средняя"
-  },
-  {
-    text: "Битва разумов: террорист с маской и императорской силой.",
-    answers: ["Код Гиас", "Тетрадь смерти", "Атака титанов", "Хеллсинг"],
-    correct: "Код Гиас",
-    difficulty: "Сложная"
-  },
-  {
-    text: "Он стал демоном ради силы, брат охотник на демонов.",
-    answers: ["Академия ведьм", "Токийский гуль", "Клинок, рассекающий демонов", "Наруто"],
-    correct: "Клинок, рассекающий демонов",
-    difficulty: "Хардкорная"
-  }
-];
-
-// Показать вопрос
-function showQuestion() {
-  const q = questions[Math.floor(Math.random() * questions.length)];
-  currentQuestion = q;
-  document.getElementById("questionText").textContent = q.text;
-  document.getElementById("difficultyLabel").textContent = "Сложность: " + q.difficulty;
-  const answersDiv = document.getElementById("answers");
-  answersDiv.innerHTML = "";
-  shuffleArray(q.answers).forEach(answer => {
-    const btn = document.createElement("button");
-    btn.textContent = answer;
-    btn.onclick = () => checkAnswer(answer);
-    answersDiv.appendChild(btn);
-  });
+function startGame(difficulty) {
+  currentDifficulty = difficulty;
+  usedQuestions = [];
+  askQuestion();
 }
 
-function checkAnswer(answer) {
-  if (answer === currentQuestion.correct) {
-    rc += 5;
-    alert("Правильно! +5 RC");
-  } else {
-    alert("Неверно! Это было: " + currentQuestion.correct);
-  }
-  localStorage.setItem('rcPoints', rc);
-  rcSpan.textContent = rc;
-  showQuestion();
-}
-
-// Удалить два неверных
-function useRevealer() {
-  if (rc < 50) {
-    alert("Недостаточно RC (нужно 50)");
+function askQuestion() {
+  const available = questions[currentDifficulty].filter(q => !usedQuestions.includes(q.question));
+  if (available.length === 0) {
+    document.getElementById("game-container").innerHTML = "<p>Вопросы закончились. Обновите страницу.</p>";
     return;
   }
-  rc -= 50;
-  localStorage.setItem('rcPoints', rc);
-  rcSpan.textContent = rc;
 
-  const btns = Array.from(document.getElementById("answers").children);
-  let removed = 0;
-  for (let btn of btns) {
-    if (btn.textContent !== currentQuestion.correct && removed < 2) {
-      btn.style.display = "none";
-      removed++;
-    }
-  }
+  const q = available[Math.floor(Math.random() * available.length)];
+  usedQuestions.push(q.question);
+
+  const optionsHTML = q.options
+    .map(opt => `<button onclick="checkAnswer('${opt}', '${q.answer}')">${opt}</button>`)
+    .join("<br>");
+
+  document.getElementById("game-container").innerHTML = `
+    <p><strong>${q.question}</strong></p>
+    ${optionsHTML}
+  `;
 }
 
-// Музыка
+function checkAnswer(selected, correct) {
+  if (selected === correct) {
+    rcPoints += 5;
+    localStorage.setItem("rcPoints", rcPoints);
+    document.getElementById("rc-points").innerText = rcPoints;
+    alert("Правильно! +5 RC");
+  } else {
+    alert("Неправильно.");
+  }
+  askQuestion();
+}
+
 function toggleMusic() {
-  music.paused ? music.play() : music.pause();
+  const music = document.getElementById("bg-music");
+  music.muted = !music.muted;
 }
-
-// Сброс RC
-function resetRCPoints() {
-  if (confirm("Сбросить RC баллы?")) {
-    rc = 0;
-    localStorage.setItem('rcPoints', 0);
-    rcSpan.textContent = 0;
-  }
-}
-
-// Перемешивание
-function shuffleArray(arr) {
-  return arr.map(value => ({ value, sort: Math.random() }))
-    .sort((a, b) => a.sort - b.sort)
-    .map(({ value }) => value);
-}
-
-// Запуск
-showQuestion();
