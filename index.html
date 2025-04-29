@@ -1,29 +1,32 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Угадай Аниме</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
-    <h1>🎌 Угадай Аниме</h1>
-    <p>RC Баллы: <span id="rcPoints">0</span></p>
-
-    <div id="questionBox">
-      <p id="questionText"></p>
-      <div id="answers"></div>
-      <p id="difficultyLabel"></p>
-    </div>
-
-    <button onclick="useRevealer()">🧪 Использовать выявитель (-50 RC)</button>
-    <button onclick="resetRCPoints()">♻️ Сбросить RC</button>
-    <button onclick="toggleMusic()">🔇 Музыка</button>
-
-    <audio id="bg-music" autoplay loop>
-      <source src="unravel.mp3" type="audio/mpeg" />
-    </audio>
+  <div class="header">
+    <img src="naruto.jpg" alt="Naruto" class="logo" />
+    <h1>🎌 Угадай Аниме 🎌</h1>
+    <p>RC Баллы: <span id="rc-points">0</span></p>
+    <button onclick="toggleMusic()">🔇 Звук</button>
   </div>
+
+  <div class="difficulty-select">
+    <button onclick="startGame('easy')">Легкая</button>
+    <button onclick="startGame('medium')">Средняя</button>
+    <button onclick="startGame('hard')">Сложная</button>
+    <button onclick="startGame('hardcore')">Хардкор</button>
+  </div>
+
+  <div id="game-container" class="game"></div>
+
+  <audio id="bg-music" autoplay loop>
+    <source src="unravel.mp3" type="audio/mpeg" />
+  </audio>
 
   <script src="script.js"></script>
 </body>
