@@ -1,84 +1,81 @@
-// script.js
-const questions = {
-  easy: [
-    {
-      question: "Главный герой хочет стать Хокаге.",
-      options: ["Bleach", "Naruto", "One Piece", "Tokyo Ghoul"],
-      answer: "Naruto"
-    },
-    {
-      question: "Мальчик становится охотником за сокровищами.",
-      options: ["Naruto", "Hunter x Hunter", "Attack on Titan", "Death Note"],
-      answer: "Hunter x Hunter"
-    }
-  ],
-  medium: [
-    {
-      question: "Мальчик находит тетрадь смерти.",
-      options: ["Blue Exorcist", "Demon Slayer", "Death Note", "My Hero Academia"],
-      answer: "Death Note"
-    }
-  ],
-  hard: [
-    {
-      question: "Мир, в котором человечество борется с титанами.",
-      options: ["Bleach", "Attack on Titan", "Naruto", "Sword Art Online"],
-      answer: "Attack on Titan"
-    }
-  ],
-  hardcore: [
-    {
-      question: "ГГ становится гульем после пересадки органов.",
-      options: ["Naruto", "Tokyo Ghoul", "One Piece", "Chainsaw Man"],
-      answer: "Tokyo Ghoul"
-    }
-  ]
-};
-
 let usedQuestions = [];
-let currentDifficulty = "";
-let rcPoints = parseInt(localStorage.getItem("rcPoints")) || 0;
-document.getElementById("rc-points").innerText = rcPoints;
+let score = parseInt(localStorage.getItem("rcScore")) || 0;
+document.getElementById("score").textContent = score;
 
-function startGame(difficulty) {
-  currentDifficulty = difficulty;
-  usedQuestions = [];
-  askQuestion();
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
 }
 
-function askQuestion() {
-  const available = questions[currentDifficulty].filter(q => !usedQuestions.includes(q.question));
-  if (available.length === 0) {
-    document.getElementById("game-container").innerHTML = "<p>Вопросы закончились. Обновите страницу.</p>";
+function nextQuestion() {
+  const difficulty = document.getElementById("difficulty").value;
+  let pool = animeQuestions.filter(q => !usedQuestions.includes(q.question));
+  if (difficulty !== "все") {
+    pool = pool.filter(q => q.difficulty === difficulty);
+  }
+
+  if (pool.length === 0) {
+    alert("Вопросы закончились!");
     return;
   }
 
-  const q = available[Math.floor(Math.random() * available.length)];
-  usedQuestions.push(q.question);
+  const randomIndex = Math.floor(Math.random() * pool.length);
+  const question = pool[randomIndex];
+  usedQuestions.push(question.question);
 
-  const optionsHTML = q.options
-    .map(opt => `<button onclick="checkAnswer('${opt}', '${q.answer}')">${opt}</button>`)
-    .join("<br>");
+  document.getElementById("question").textContent = question.question;
 
-  document.getElementById("game-container").innerHTML = `
-    <p><strong>${q.question}</strong></p>
-    ${optionsHTML}
-  `;
+  const optionsDiv = document.getElementById("options");
+  optionsDiv.innerHTML = "";
+  const options = [...question.options];
+  shuffle(options);
+  options.forEach(opt => {
+    const btn = document.createElement("button");
+    btn.textContent = opt;
+    btn.onclick = () => checkAnswer(opt, question.answer);
+    optionsDiv.appendChild(btn);
+  });
 }
 
 function checkAnswer(selected, correct) {
   if (selected === correct) {
-    rcPoints += 5;
-    localStorage.setItem("rcPoints", rcPoints);
-    document.getElementById("rc-points").innerText = rcPoints;
+    score += 5;
     alert("Правильно! +5 RC");
   } else {
-    alert("Неправильно.");
+    alert("Неправильно! Было: " + correct);
   }
-  askQuestion();
+  localStorage.setItem("rcScore", score);
+  document.getElementById("score").textContent = score;
+}
+
+function useReveal() {
+  if (score < 50) {
+    alert("Недостаточно RC!");
+    return;
+  }
+  score -= 50;
+  localStorage.setItem("rcScore", score);
+  document.getElementById("score").textContent = score;
+
+  const buttons = document.querySelectorAll("#options button");
+  let count = 0;
+  buttons.forEach(btn => {
+    if (btn.textContent !== animeQuestions.find(q => q.question === document.getElementById("question").textContent).answer) {
+      if (count < 2) {
+        btn.disabled = true;
+        count++;
+      }
+    }
+  });
 }
 
 function toggleMusic() {
   const music = document.getElementById("bg-music");
+  const btn = document.getElementById("toggle-music");
   music.muted = !music.muted;
+  btn.textContent = music.muted ? "🔇 Вкл. звук" : "🔊 Выкл. звук";
 }
+
+window.onload = nextQuestion;
