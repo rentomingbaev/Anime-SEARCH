@@ -1,81 +1,49 @@
-let usedQuestions = [];
-let score = parseInt(localStorage.getItem("rcScore")) || 0;
-document.getElementById("score").textContent = score;
+let currentQuestionIndex = 0;
+let score = 0;
 
-function shuffle(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-}
+const questionElement = document.getElementById("question");
+const optionsElement = document.getElementById("options");
+const nextButton = document.getElementById("next-button");
+const scoreElement = document.getElementById("score");
 
-function nextQuestion() {
-  const difficulty = document.getElementById("difficulty").value;
-  let pool = animeQuestions.filter(q => !usedQuestions.includes(q.question));
-  if (difficulty !== "все") {
-    pool = pool.filter(q => q.difficulty === difficulty);
-  }
+function showQuestion() {
+  const currentQuestion = questions[currentQuestionIndex];
+  questionElement.textContent = currentQuestion.question;
+  optionsElement.innerHTML = "";
 
-  if (pool.length === 0) {
-    alert("Вопросы закончились!");
-    return;
-  }
-
-  const randomIndex = Math.floor(Math.random() * pool.length);
-  const question = pool[randomIndex];
-  usedQuestions.push(question.question);
-
-  document.getElementById("question").textContent = question.question;
-
-  const optionsDiv = document.getElementById("options");
-  optionsDiv.innerHTML = "";
-  const options = [...question.options];
-  shuffle(options);
-  options.forEach(opt => {
-    const btn = document.createElement("button");
-    btn.textContent = opt;
-    btn.onclick = () => checkAnswer(opt, question.answer);
-    optionsDiv.appendChild(btn);
+  currentQuestion.options.forEach(option => {
+    const li = document.createElement("li");
+    const button = document.createElement("button");
+    button.textContent = option;
+    button.addEventListener("click", () => selectAnswer(option));
+    li.appendChild(button);
+    optionsElement.appendChild(li);
   });
 }
 
-function checkAnswer(selected, correct) {
-  if (selected === correct) {
-    score += 5;
-    alert("Правильно! +5 RC");
+function selectAnswer(selectedOption) {
+  const currentQuestion = questions[currentQuestionIndex];
+  if (selectedOption === currentQuestion.answer) {
+    score++;
+    alert("Правильно!");
   } else {
-    alert("Неправильно! Было: " + correct);
+    alert(`Неправильно! Правильный ответ: ${currentQuestion.answer}`);
   }
-  localStorage.setItem("rcScore", score);
-  document.getElementById("score").textContent = score;
-}
-
-function useReveal() {
-  if (score < 50) {
-    alert("Недостаточно RC!");
-    return;
+  scoreElement.textContent = `Счёт: ${score}`;
+  currentQuestionIndex++;
+  if (currentQuestionIndex < questions.length) {
+    showQuestion();
+  } else {
+    alert(`Игра окончена! Ваш счёт: ${score} из ${questions.length}`);
+    // Сброс игры
+    currentQuestionIndex = 0;
+    score = 0;
+    scoreElement.textContent = `Счёт: ${score}`;
+    showQuestion();
   }
-  score -= 50;
-  localStorage.setItem("rcScore", score);
-  document.getElementById("score").textContent = score;
-
-  const buttons = document.querySelectorAll("#options button");
-  let count = 0;
-  buttons.forEach(btn => {
-    if (btn.textContent !== animeQuestions.find(q => q.question === document.getElementById("question").textContent).answer) {
-      if (count < 2) {
-        btn.disabled = true;
-        count++;
-      }
-    }
-  });
 }
 
-function toggleMusic() {
-  const music = document.getElementById("bg-music");
-  const btn = document.getElementById("toggle-music");
-  music.muted = !music.muted;
-  btn.textContent = music.muted ? "🔇 Вкл. звук" : "🔊 Выкл. звук";
-}
+nextButton.addEventListener("click", showQuestion);
 
-window.onload = nextQuestion;
+// Начать игру
+showQuestion();
